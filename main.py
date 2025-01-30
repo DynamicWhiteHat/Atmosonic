@@ -216,9 +216,7 @@ def get_location():
     if g.latlng:
         location = GeoLocation(g.latlng)
     else:
-        # If geocoder doesn't work, fallback to geopy
-        geolocator = Nominatim(user_agent="geoapi")
-        location = geolocator.geocode("Your IP Address")  # Can replace with a known location
+        location = None
     
     return location
 
