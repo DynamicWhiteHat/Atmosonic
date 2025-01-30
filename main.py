@@ -380,6 +380,7 @@ with st.container():
         lSide, rSide = st.columns(2, vertical_alignment="center")
         with lSide:
             st.image("icons/{}.png".format(weather_code if weather_code not in [None, "N/A"] else 0), width=200)
+            #fallback
             description = weather_codes.get(weather_code, "Unknown Weather")
             st.markdown(f"<h4 style='color: #FFFFFF; margin-left: 2.15em; text-decoration: underline 3px white; text-align: center;'>{description}</h4>", unsafe_allow_html=True)
         with rSide:
