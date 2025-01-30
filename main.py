@@ -3,7 +3,9 @@ import streamlit as st
 import requests
 from geopy.geocoders import Nominatim
 import json
+import geocoder
 from datetime import datetime
+import random
 
 #configuring the page
 st.set_page_config(
@@ -12,11 +14,38 @@ st.set_page_config(
    layout="wide",
    initial_sidebar_state="expanded",
 )
+st.markdown("""
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+        .text, .text1 {
+            text-align: center;
+            color: #FFFFFF;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.5em;
+            font-weight: 500;
+        }
+        .text1 {
+            font-size: 1.1em;
+            }
+        .highlight-text {
+            color: #ff4b4b;
+            display: inline;
+            font-weight: bold;
+        }
+        .holder {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2em;
+            margin-bottom: 1em;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 #Title
 st.title (':red[Atmosonic: Your Weather App]')
 
-place = "Florida, United States"
 # API & Location
 
 weather_phrases = {
@@ -51,6 +80,7 @@ weather_phrases = {
 }
 
 
+
 weather_codes = {
     0: "Clear Sky",
     1: "Mainly Clear",
@@ -82,6 +112,72 @@ weather_codes = {
     99: "Thunderstorm with heavy hail"
 }
 
+weather_music = {
+    # Rainy Weather 🌧️ (codes for rain, drizzle, and rain showers)
+    (51, 53, 55, 61, 63, 65, 80, 81, 82): [
+        "Rainy Days and Mondays – The Carpenters",
+        "Purple Rain – Prince",
+        "Set Fire to the Rain – Adele",
+        "No Rain – Blind Melon",
+        "Riders on the Storm – The Doors"
+    ],
+    
+    # Sunny Weather ☀️ (clear sky or mostly clear)
+    (0, 1): [
+        "Walking on Sunshine – Katrina and the Waves",
+        "Here Comes the Sun – The Beatles",
+        "Good Vibrations – The Beach Boys",
+        "Pocketful of Sunshine – Natasha Bedingfield",
+        "Sun is Shining – Bob Marley"
+    ],
+    
+    # Cloudy Weather ☁️ (partly cloudy, mostly cloudy, overcast)
+    (2, 3, 45, 48): [
+        "Cloudy – Simon & Garfunkel",
+        "Both Sides, Now – Joni Mitchell",
+        "Just Like Heaven – The Cure",
+        "Cloudbusting – Kate Bush",
+        "A Hazy Shade of Winter – Simon & Garfunkel"
+    ],
+    
+    # Snowy Weather ❄️ (snowfall, snow grains)
+    (71, 73, 75, 77, 85, 86): [
+        "Let It Snow! Let It Snow! Let It Snow! – Dean Martin",
+        "White Winter Hymnal – Fleet Foxes",
+        "Sweater Weather – The Neighbourhood",
+        "Coldplay – Snow Patrol",
+        "Do You Want to Build a Snowman? – Kristen Bell, Agatha Lee Monn"
+    ],
+    
+    # Thunderstorm Weather 🌩️ (thunderstorm, thunderstorm with hail)
+    (95, 96, 99): [
+        "Thunderstruck – AC/DC",
+        "Lightning Crashes – Live",
+        "Blinding Lights – The Weeknd",
+        "Electric Feel – MGMT",
+        "Bohemian Rhapsody – Queen"
+    ],
+    
+    # Windy Weather 🌬️ (strong winds)
+    (71, 73, 75, 77): [
+        "Blowin' in the Wind – Bob Dylan",
+        "Dust in the Wind – Kansas",
+        "Wild Is the Wind – Nina Simone or David Bowie",
+        "Against the Wind – Bob Seger",
+        "Candle in the Wind – Elton John"
+    ],
+    
+    # After the Storm (Hopeful Weather) 🌈
+    (0, 1, 3, 5): [
+        "Rainbow – Kacey Musgraves",
+        "Somewhere Over the Rainbow – Israel Kamakawiwo'ole",
+        "I Can See Clearly Now – Johnny Nash",
+        "Here Comes the Sun – The Beatles",
+        "Walking on Sunshine – Katrina and the Waves"
+    ]
+}
+
+
 def get_wind_condition(wind_speed):
     if wind_speed >= 0 and wind_speed <= 5:
         return "Light breeze"
@@ -98,11 +194,60 @@ def get_wind_condition(wind_speed):
     else:
         return "Storm"
 
-geolocator = Nominatim(user_agent="geoapi")
+import geocoder
+from geopy.geocoders import Nominatim
 
-location = geolocator.geocode(place)
+# Initialize geolocator
+geolocator = Nominatim(user_agent="geoapi")
+class GeoLocation:
+    def __init__(self, latlng):
+        if latlng:
+            self.latitude = latlng[0]
+            self.longitude = latlng[1]
+        else:
+            self.latitude = None
+            self.longitude = None
+
+# Get location from IP
+def get_location():
+    # Try using geocoder
+    g = geocoder.ip('me')
+    
+    if g.latlng:
+        location = GeoLocation(g.latlng)
+    else:
+        # If geocoder doesn't work, fallback to geopy
+        geolocator = Nominatim(user_agent="geoapi")
+        location = geolocator.geocode("Your IP Address")  # Can replace with a known location
+    
+    return location
+
+
+# Check if latlng is available
+location = get_location()
+if location:
+
+    # Use geopy to reverse geocode the coordinates
+    newLoc = geolocator.reverse((location.latitude, location.longitude), language='en', exactly_one=True)
+    
+    # Extract the address
+    if newLoc:
+        address = newLoc.raw.get('address', {})
+        county = address.get('county') if address.get('county') else address.get('city', '')
+        county = county + ", " if county else ''
+        state = address.get('state', 'Not available')
+        country = address.get('country', 'Not available')
+        
+        # Format the location string
+        place = str(county.title() + str(state).title() + ', ' + str(country).title())
+        print(place)
+    else:
+        place = "Florida, United States"
+else:
+    place = "Florida, United States"
 
 base_url = "https://api.open-meteo.com/v1/forecast"
+
 
 params = {
     "latitude": location.latitude,
@@ -168,25 +313,54 @@ def get_weather_data():
     else:
         print("Error fetching weather data.")
 
+
 def getChange(dataType, wantedType):
     hour = datetime.now().hour
     pre = data.get('hourly', {}).get(dataType, [])[hour-1]
     return round((wantedType - pre),2)
-
 def update():
     print(place)
     try:
         global location
         global params
+        
+        # Perform geocoding (convert place name to latitude and longitude)
         location = geolocator.geocode(place)
+        
+        if location is None:
+            raise ValueError("Location not found.")
+        
         params["latitude"] = location.latitude
         params["longitude"] = location.longitude
-        placeholder.markdown(f"### Displaying Weather For: {place}", unsafe_allow_html=True)
+        
+        # Perform reverse geocoding (convert latitude and longitude to address)
+        newLoc = geolocator.reverse((location.latitude, location.longitude), language='en', exactly_one=True)
+        
+        if newLoc is None:
+            raise ValueError("Unable to reverse geocode coordinates.")
+        
+        address = newLoc.raw.get('address', {})
+        
+        # Get county, state, and country with fallback values
+        county = address.get('county') if address.get('county') else address.get('city', '')
+        county = county + ", " if county else ''
+        state = address.get('state', 'Not available')
+        country = address.get('country', 'Not available')
+        
+        # Display the location in markdown
+        placeholder.markdown(f"### Displaying Weather For: {county.title() + str(state).title() + ', ' + str(country).title()}", unsafe_allow_html=True)
+        
+        # Fetch and display weather data
         get_weather_data()
         
+        # Display weather phrase
         resp.text(weather_phrases.get(weather_code, "Unknown Weather"))
-    except:
-        errorHolder.error("Invalid Location")
+
+    except ValueError as ve:
+        errorHolder.error(f"Error: {ve}")
+    
+    except Exception as e:
+        errorHolder.error(f"An unexpected error occurred: {e}")
 
 with st.container():
     errorHolder = st.empty()
@@ -203,27 +377,60 @@ with st.container():
     left, middle, right = st.columns([1.2,1,1], border=True)
 
 
-update()
-with left:
-    lSide, rSide = st.columns(2, vertical_alignment="center")
-    with lSide:
-        st.image("icons2/{}@2x.png".format(weather_code if weather_code not in [None, "N/A"] else 0), width=200)
-        description = weather_codes.get(weather_code, "Unknown Weather")
-        st.markdown(f"<h4 style='color: #FFFFFF; margin-left: 2.15em; text-decoration: dotted underline 3px white;'>{description}</h4>", unsafe_allow_html=True)
-    with rSide:
-        rSide.metric(label="Temperature", value="{} °F".format(temperature), delta="{} °F from past hour".format(getChange('temperature_2m', temperature)))
-        rSide.metric(label="Feels Like", value="{} °F".format(feelsLike), delta="{} °F difference".format(round((feelsLike - temperature), 2)), delta_color="off")
-        rSide.metric(label="Max Temperature", value="{} °F".format(max_temp))
-        rSide.metric(label="Min Temperature", value="{} °F".format(min_temp))
+    update()
+    with left:
+        lSide, rSide = st.columns(2, vertical_alignment="center")
+        with lSide:
+            st.image("icons/{}.png".format(weather_code if weather_code not in [None, "N/A"] else 0), width=200)
+            description = weather_codes.get(weather_code, "Unknown Weather")
+            st.markdown(f"<h4 style='color: #FFFFFF; margin-left: 2.15em; text-decoration: underline 3px white;'>{description}</h4>", unsafe_allow_html=True)
+        with rSide:
+            rSide.metric(label="Temperature", value="{} °F".format(temperature), delta="{} °F from past hour".format(getChange('temperature_2m', temperature)))
+            rSide.metric(label="Feels Like", value="{} °F".format(feelsLike), delta="{} °F difference".format(round((feelsLike - temperature), 2)), delta_color="off")
+            rSide.metric(label="Max Temperature", value="{} °F".format(max_temp))
+            rSide.metric(label="Min Temperature", value="{} °F".format(min_temp))
 
-middle.metric(label="Humidity", value="{}%".format(data.get('current', {}).get('relative_humidity_2m', 'N/A')), delta="{}% from past hour".format(getChange('relative_humidity_2m', data.get('current', {}).get('relative_humidity_2m', 'N/A'))))       
-middle.metric(label="Chance Of Precipitation", value="{}%".format(precipPercent))
-middle.metric(label="Precipitation", value="{} in".format(precipitaion))
-middle.metric(label="Wind Speed", value="{} mph: {}".format(wind_speed, (get_wind_condition(wind_speed)).title()), delta="{} mph from past hour".format(getChange('wind_speed_10m', wind_speed)))
+    middle.metric(label="Humidity", value="{}%".format(data.get('current', {}).get('relative_humidity_2m', 'N/A')), delta="{}% from past hour".format(getChange('relative_humidity_2m', data.get('current', {}).get('relative_humidity_2m', 'N/A'))))       
+    middle.metric(label="Chance Of Precipitation", value="{}%".format(precipPercent))
+    middle.metric(label="Precipitation", value="{} in".format(precipitaion))
+    middle.metric(label="Wind Speed", value="{} mph: {}".format(wind_speed, (get_wind_condition(wind_speed)).title()), delta="{} mph from past hour".format(getChange('wind_speed_10m', wind_speed)))
+    
+    with right:
+        st.metric(label="Sunrise", value=sunrise)
+        st.metric(label="Sunset", value=sunset)
+        
+        songHolder = st.empty()
+        musicHolder = st.empty()
+        name = "Skyfall"
+        artist = "Adele"
+        audio_file = "downloads/{}.mp3".format(name)
 
-right.metric(label="Sunrise", value=sunrise)
-right.metric(label="Sunset", value=sunset)
+        htmlName = """<div class="holder"><div class="text">Now Playing: <span class="highlight-text">{}</span></div><div class="text1"><i>{}</i></div></div>""".format(name, artist)
+        songHolder.markdown(htmlName, unsafe_allow_html=True)
+        musicHolder.audio(audio_file, format='audio/mp3', loop=True, autoplay=True)
+
+def doSong():
+        global weather_code
+        song_list = next((songs for codes, songs in weather_music.items() if weather_code in codes), [])
+        if song_list:
+            print("yes")
+            song = song_list[random.randrange(0, len(song_list))]  # Select the first song from the list
+            name, artist = song.rsplit(" – ", 1)  # Split the song and artist
+            audio_file = f"downloads/{name}.mp3"  # Update the audio file path
+            htmlName = """<div class="holder"><div class="text">Now Playing: <span class="highlight-text">{}</span></div><div class="text1"><i>{}</i></div></div>""".format(name, artist)
+            songHolder.markdown(htmlName, unsafe_allow_html=True)
+            musicHolder.audio(audio_file, format='audio/mp3', loop=True, autoplay=True)
+        else:
+            print("No")
+            songHolder.markdown("<div class='holder'><div class='text'>No music available for this weather.</div></div>", unsafe_allow_html=True)
+
+doSong()
+
+code = weather_code
 
 while True:
-    time.sleep(120)
-    update()
+    time.sleep(45)
+    newCode = update()
+    if newCode != code:
+        doSong()
+        code = newCode
