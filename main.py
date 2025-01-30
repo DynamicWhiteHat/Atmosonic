@@ -427,6 +427,8 @@ doSong()
 
 code = weather_code
 
+st.markdown("Made with ❤️ by [DynamicWhiteHat](https://www.github.com/DynamicWhiteHat)")
+
 while True:
     time.sleep(45)
     newCode = update()
