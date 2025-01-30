@@ -224,22 +224,24 @@ def get_location():
 # Check if latlng is available
 location = get_location()
 if location:
-
+    try:
     # Use geopy to reverse geocode the coordinates
-    newLoc = geolocator.reverse((location.latitude, location.longitude), language='en', exactly_one=True)
-    
-    # Extract the address
-    if newLoc:
-        address = newLoc.raw.get('address', {})
-        county = address.get('county') if address.get('county') else address.get('city', '')
-        county = county + ", " if county else ''
-        state = address.get('state', 'Not available')
-        country = address.get('country', 'Not available')
+        newLoc = geolocator.reverse((location.latitude, location.longitude), language='en', exactly_one=True)
         
-        # Format the location string
-        place = str(county.title() + str(state).title() + ', ' + str(country).title())
-        print(place)
-    else:
+        # Extract the address
+        if newLoc:
+            address = newLoc.raw.get('address', {})
+            county = address.get('county') if address.get('county') else address.get('city', '')
+            county = county + ", " if county else ''
+            state = address.get('state', 'Not available')
+            country = address.get('country', 'Not available')
+            
+            # Format the location string
+            place = str(county.title() + str(state).title() + ', ' + str(country).title())
+            print(place)
+        else:
+            place = "Florida, United States"
+    except:
         place = "Florida, United States"
 else:
     place = "Florida, United States"
