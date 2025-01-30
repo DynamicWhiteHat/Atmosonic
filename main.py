@@ -381,7 +381,7 @@ with st.container():
         with lSide:
             st.image("icons/{}.png".format(weather_code if weather_code not in [None, "N/A"] else 0), width=200)
             description = weather_codes.get(weather_code, "Unknown Weather")
-            st.markdown(f"<h4 style='color: #FFFFFF; margin-left: 2.15em; text-decoration: underline 3px white;'>{description}</h4>", unsafe_allow_html=True)
+            st.markdown(f"<h4 style='color: #FFFFFF; margin-left: 2.15em; text-decoration: underline 3px white; text-align: center;'>{description}</h4>", unsafe_allow_html=True)
         with rSide:
             rSide.metric(label="Temperature", value="{} °F".format(temperature), delta="{} °F from past hour".format(getChange('temperature_2m', temperature)))
             rSide.metric(label="Feels Like", value="{} °F".format(feelsLike), delta="{} °F difference".format(round((feelsLike - temperature), 2)), delta_color="off")
