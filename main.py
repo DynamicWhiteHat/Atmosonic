@@ -413,12 +413,15 @@ def doSong():
         song_list = next((songs for codes, songs in weather_music.items() if weather_code in codes), [])
         if song_list:
             print("yes")
-            song = song_list[random.randrange(0, len(song_list))]  # Select the first song from the list
-            name, artist = song.rsplit(" – ", 1)  # Split the song and artist
-            audio_file = f"downloads/{name}.mp3"  # Update the audio file path
-            htmlName = """<div class="holder"><div class="text">Now Playing: <span class="highlight-text">{}</span></div><div class="text1"><i>{}</i></div></div>""".format(name, artist)
-            songHolder.markdown(htmlName, unsafe_allow_html=True)
-            musicHolder.audio(audio_file, format='audio/mp3', loop=True, autoplay=True)
+            try:
+                song = song_list[random.randrange(0, len(song_list))]  # Select the first song from the list
+                name, artist = song.rsplit(" – ", 1)  # Split the song and artist
+                audio_file = f"downloads/{name}.mp3"  # Update the audio file path
+                htmlName = """<div class="holder"><div class="text">Now Playing: <span class="highlight-text">{}</span></div><div class="text1"><i>{}</i></div></div>""".format(name, artist)
+                songHolder.markdown(htmlName, unsafe_allow_html=True)
+                musicHolder.audio(audio_file, format='audio/mp3', loop=True, autoplay=True)
+            except:
+                st.error("An error occurred while trying to play music. Now playing Skyfall by Adele.")
         else:
             print("No")
             songHolder.markdown("<div class='holder'><div class='text'>No music available for this weather.</div></div>", unsafe_allow_html=True)
