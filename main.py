@@ -355,7 +355,7 @@ def update():
         
         # Display weather phrase
         resp.text(weather_phrases.get(weather_code, "Unknown Weather"))
-
+        return weather_code
     except ValueError as ve:
         errorHolder.error(f"Error: {ve}")
     
