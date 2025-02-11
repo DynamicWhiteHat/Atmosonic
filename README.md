@@ -1,4 +1,4 @@
-# Atmosonic - *Your* Personal Weather: <a href="atmosonic.streamlit.app">atmosonic.streamlit.app</a>
+# Atmosonic - *Your* Personal Weather: <a href="https://atmosonic.streamlit.app">atmosonic.streamlit.app</a>
 ## Powered By: 
 <pre><a href="https://streamlit.io"><img src="https://streamlit.io/images/brand/streamlit-logo-primary-colormark-lighttext.png" width=150></a></pre>
 
